@@ -37,6 +37,49 @@ STA只关心是否需要同步收敛时序。如果没有交互但是同源的�
 CTS关心同步的时钟是否需要blance。因此，同步时钟，但是没有路径交互的时钟，可以不balance。
 
 
+CTS学习总结（二）   
+日期：2016-10-13 11:03 浏览：137 回复：0
+ 
+
+CTS是先插入buf，满足drc要求（transition/cap/fanout）。然后再resized，用来balance skew；最后是考虑insertion delay。DRC 》 skew 》 latency
+
+CTS做树工具是从sink点开始往前做到source点。
+
+CTS两大目的：1.DRC满足；2最小的skew和latency
+
+CTS对skew和latency的默认设置：工具默认值是0；
+
+最好不要将drc和skew设置太严格，这样会增加buf 级数，同时run time较长
+
+时钟树最好使用rise/fall balance的buf，同时使用inverter对。
+
+CTS阶段工具自动propagated时钟，不需要使用set_propagated_clock的命令；
+
+工具在post-CTS阶段，最好将uncertainty去掉，否则工具会把实际的skew+uncertainty当做skew的最大值，不停的优化这个skew。疑问，CTS前期做树阶段不需要去掉吗？
+
+工具认为的三种sink点的pin，以及工具处理方式：
+
+stop pins；寄存器或者latch时钟端，可以认为是时钟树的终点。这些pin是会优化DRC，skew&latency。最重要的是这些pin需要优化是，只要在外部优化时钟树即可。
+
+float pins: IP的时钟pin。类似stop pin，因为同样优化DRC，skew&latency。但是和stop pin不同点是需要考虑IP内部的latency来优化skew。
+
+exclude（ignore）pins：CTS忽略skew&latency，只fix DRC。包括以下类型：
+
+a.       时序cell的非时钟pin；
+
+b.       输出端口
+
+c.       没有fanout的组合逻辑cell的pin或者ICG的pin
+
+d.       3态使能pin
+
+e.       数据路径的mux的s端
+
+f.        定义错误的时钟pin（包括没有反转信息的时钟pin，输出时钟没有
+
+g.       常值的buf/inv的输入pin；
+
+
 
 3：Recovery/removal
 
